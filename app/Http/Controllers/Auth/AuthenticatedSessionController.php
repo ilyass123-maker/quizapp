@@ -1,10 +1,13 @@
 <?php
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Controller;
 
 class AuthenticatedSessionController extends Controller
 {
+    // This method handles login and redirects based on user type
     public function store(Request $request)
     {
         $credentials = $request->validate([
@@ -15,22 +18,29 @@ class AuthenticatedSessionController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return redirect()->intended('/quiz');  // Redirect to the quiz page
+            // Redirect based on user type
+            if (Auth::user()->type === 'teacher') {
+                return redirect()->intended('/welcome-teacher');
+            } else {
+                return redirect()->intended('/quiz');
+            }
         }
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
-        ]);
+        ])->onlyInput('email');
     }
 
+    // Handle logout
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
+        Auth::logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        return redirect('/');
     }
 }
+

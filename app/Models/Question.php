@@ -2,25 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Question extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'text', 'type', 'answers', 'correct'
-    ];
+    use HasFactory;
 
-    /**
-     * If your `answers` and `correct` columns are stored as JSON,
-     * you can add them to the casts array for automatic decoding/encoding.
-     */
-    protected $casts = [
-        'answers' => 'array',
-        'correct' => 'array',
-    ];
+    protected $fillable = ['quiz_id', 'text', 'type', 'answers', 'correct']; // Update here to match your fields
+
+    public function quiz()
+    {
+        return $this->belongsTo(Quiz::class);
+    }
 }

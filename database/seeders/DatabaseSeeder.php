@@ -1,14 +1,21 @@
 <?php
 
 namespace Database\Seeders;
-
+use App\Models\Quiz;
 use Illuminate\Database\Seeder;
+use App\Models\Question;
 
 class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        $this->call(QuizSeeder::class);
-        $this->call(QuestionSeeder::class);
+        $this->call([
+            MathQuizSeeder::class,
+            ScienceQuizSeeder::class,
+            HistoryQuizSeeder::class,
+            
+
+        ]);
     }
+    
 }

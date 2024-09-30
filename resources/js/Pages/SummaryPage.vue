@@ -1,39 +1,35 @@
 <template>
-  <div class="container">
-    <h2>Summary</h2>
-    <div v-for="(question, index) in questions" :key="index" class="summary-item"
-         :class="{
-           'correct-section': isCorrect(index),
-           'wrong-section': isWrong(index),
-           'skipped-section': isSkipped(index)
-         }">
+  <div class="container summary-container">
+    <h2>Quiz Summary</h2>
+
+    <div v-for="(question, index) in questions" :key="index" class="summary-item">
       <p><strong>Question {{ index + 1 }}:</strong> {{ question.text }}</p>
-      <p><strong>Your Answer:</strong> 
-        <span :class="{
-          'correct-answer': isCorrect(index),
-          'wrong-answer': isWrong(index),
-          'skipped-answer': isSkipped(index)
-        }">
-          <span v-if="isSkipped(index)">
-            Skipped
-          </span>
-          <span v-else-if="question.type === 'multi-choice'">
-            <span v-for="(answer, idx) in (userAnswers[index] || [])" :key="idx">{{ answer }}<span v-if="idx < (userAnswers[index] || []).length - 1">, </span></span>
+
+      <div :class="{'correct-section': isCorrect(question, index), 'wrong-section': !isCorrect(question, index)}">
+        <p>Your Answer: 
+          <span v-if="question.type === 'multi-choice'">
+            <span v-for="answer in userAnswers[index]" :key="answer">
+              {{ answer }}
+            </span>
           </span>
           <span v-else>
-            {{ userAnswers[index] || 'Skipped' }}
+            {{ userAnswers[index] }}
           </span>
-        </span>
-      </p>
-      <p><strong>Correct Answer:</strong> 
-        <span v-if="question.type === 'multi-choice'">
-          <span v-for="(answer, idx) in question.answers.filter(a => a.correct)" :key="idx">{{ answer.text }}<span v-if="idx < question.answers.filter(a => a.correct).length - 1">, </span></span>
-        </span>
-        <span v-else>
-          {{ question.correct }}
-        </span>
-      </p>
+        </p>
+
+        <p>Correct Answer: 
+          <span v-if="question.type === 'multi-choice'">
+            <span v-for="answer in parseAnswers(question).filter(a => a.correct)" :key="answer.text">
+              {{ answer.text }}
+            </span>
+          </span>
+          <span v-else>
+            {{ question.correct }}
+          </span>
+        </p>
+      </div>
     </div>
+
     <div class="button-container">
       <button class="restart" @click="restartQuiz">Restart Quiz</button>
     </div>
@@ -44,40 +40,40 @@
 export default {
   props: ['questions', 'userAnswers'],
   methods: {
-    isCorrect(index) {
-      const question = this.questions[index];
+    // Utility method to parse the answers field
+    parseAnswers(question) {
+      try {
+        return JSON.parse(question.answers);  // Ensure it's parsed as an array
+      } catch (e) {
+        console.error('Failed to parse answers:', e);
+        return [];  // Fallback to an empty array in case of an error
+      }
+    },
+    
+    isCorrect(question, index) {
       const userAnswer = this.userAnswers[index];
 
-      if (!question || userAnswer === null || userAnswer === undefined) return false;
+      if (!userAnswer || !question.correct) return false;
 
+      // Handle multi-choice question
       if (question.type === 'multi-choice') {
-        const userAnswerSet = new Set((userAnswer || []).map(a => a.toLowerCase()));
-        const correctAnswerSet = new Set(question.answers.filter(a => a.correct).map(a => a.text.toLowerCase()));
-        return correctAnswerSet.size === userAnswerSet.size && [...userAnswerSet].every(ans => correctAnswerSet.has(ans));
+        const userAnswerSet = new Set(userAnswer.map(a => a.toLowerCase()));
+        const correctAnswerSet = new Set(
+          this.parseAnswers(question).filter(a => a.correct).map(a => a.text.toLowerCase())
+        );
+        return (
+          userAnswerSet.size === correctAnswerSet.size &&
+          [...userAnswerSet].every(ans => correctAnswerSet.has(ans))
+        );
       }
-      return userAnswer && userAnswer.toLowerCase() === question.correct.toLowerCase();
-    },
-    isWrong(index) {
-      const question = this.questions[index];
-      const userAnswer = this.userAnswers[index];
+      // Handle single-choice or typing question
+      else if (typeof question.correct === 'string' && typeof userAnswer === 'string') {
+        return userAnswer.toLowerCase() === question.correct.toLowerCase();
+      }
 
-      if (!question || userAnswer === null || userAnswer === undefined) return false;
+      return false;
+    },
 
-      if (question.type === 'multi-choice') {
-        const userAnswerSet = new Set((userAnswer || []).map(a => a.toLowerCase()));
-        const correctAnswerSet = new Set(question.answers.filter(a => a.correct).map(a => a.text.toLowerCase()));
-        return !(correctAnswerSet.size === userAnswerSet.size && [...userAnswerSet].every(ans => correctAnswerSet.has(ans)));
-      }
-      return userAnswer && userAnswer.toLowerCase() !== question.correct.toLowerCase();
-    },
-    isSkipped(index) {
-      const userAnswer = this.userAnswers[index];
-      const question = this.questions[index];
-      if (question.type === 'multi-choice') {
-        return !userAnswer || userAnswer.length === 0;
-      }
-      return userAnswer === null || userAnswer === '';
-    },
     restartQuiz() {
       this.$emit('restart');
     }

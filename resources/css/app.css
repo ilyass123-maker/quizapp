@@ -1,0 +1,29 @@
+/* Sidebar styling for consistent width */
+.settings-widget {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 5px;
+}
+
+/* Center Teacher Dashboard content */
+.settings-inner-blk {
+    text-align: center;  /* Center the content horizontally */
+}
+
+.buttons a {
+    margin: 5px;  /* Add spacing between buttons */
+}
+
+/* Ensure sidebar and main content align properly */
+@media (max-width: 768px) {
+    .settings-widget {
+        margin-bottom: 20px;
+    }
+}
+
+/* Ensure sidebar sticks correctly in layout */
+.theiaStickySidebar {
+    position: relative;
+    top: 0;
+}

@@ -9,31 +9,13 @@ class Quiz extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'title', // Add the fields that you want to be mass assignable
-        'description', // Add more fields as needed
-    ];
+    protected $fillable = ['title', 'teacher_id'];
 
-    /**
-     * Define the relationship with the Question model.
-     * Assuming a quiz has many questions.
-     */
-    public function questions()
-    {
-        return $this->hasMany(Question::class);
-    }
+    // In App\Models\Quiz.php
 
-    /**
-     * Define the relationship with the Score model.
-     * Assuming a quiz has many scores.
-     */
-    public function scores()
-    {
-        return $this->hasMany(Score::class);
-    }
+public function questions()
+{
+    return $this->hasMany(Question::class);  // Assuming a Quiz has many Questions
+}
+
 }
