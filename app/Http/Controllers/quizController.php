@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Score;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 use App\Models\Quiz;
 
 	
@@ -31,73 +31,87 @@ class QuizController extends Controller
 
 
     public function saveScore(Request $request)
-    {
-        $user = Auth::user();  // Get the authenticated user
-        $quizId = $request->input('quiz_id');
-        $answers = $request->input('answers');  // User's answers from the form
-        
-        $correctAnswersCount = 0;
-    
-        // Fetch the quiz and its questions
-        $quiz = Quiz::with('questions.options')->findOrFail($quizId);
-        
-        // Calculate the score by checking each answer
-        foreach ($quiz->questions as $question) {
-            if (isset($answers[$question->id])) {
-                $selectedOption = $answers[$question->id];
-                
-                // Check if the selected option is correct (assuming you have a way to mark correct options)
-                foreach ($question->options as $option) {
-                    if ($option->id == $selectedOption && $option->is_correct) {
-                        $correctAnswersCount++;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        // Calculate percentage score
-        $totalQuestions = $quiz->questions->count();
-        $score = ($correctAnswersCount / $totalQuestions) * 100;
-        
-        // Save the score to the 'scores' table
-        Score::create([
-            'user_id' => $user->id,
-            'quiz_id' => $quizId,
-            'score' => $score,
-        ]);
-    
-        return redirect()->route('quiz.details', ['quiz' => $quizId])->with('success', 'Quiz submitted successfully! Your score is ' . $score . '%');
-    }
+{
+    $validatedData = $request->validate([
+        'quiz_id' => 'required|exists:quizzes,id',
+        'score' => 'required|numeric',
+    ]);
+
+    // Assuming you have a `scores` table and a `Score` model
+    $score = new Score();
+    $score->user_id = Auth::id(); // assuming user is authenticated
+    $score->quiz_id = $validatedData['quiz_id'];
+    $score->score = $validatedData['score'];
+    $score->save();
+
+    return response()->json(['message' => 'Score saved successfully']);
+}
+
 public function showCreateQuizForm()
 {
     return view('teacher.create-quiz');  // Assuming you have a Blade file for creating quizzes in 'resources/views/teacher/create-quiz.blade.php'
 }
 
 // Method to store the quiz with questions
+
+
+
+
 public function storeQuizWithQuestions(Request $request)
 {
-    // Validate the request data
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'questions' => 'required|array',
-        // Add other validation rules if needed
-    ]);
+    try {
+        // Log the incoming data for debugging
+        \Log::info('Incoming Quiz Data:', $request->all());
 
-    // Create the quiz
-    $quiz = Quiz::create([
-        'title' => $request->input('title'),
-        // Add other fields as necessary
-    ]);
+        // Validate the request data
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'time_limit' => 'nullable|integer',  // Validate time_limit
+            'number_of_questions' => 'required|integer',  // Validate number_of_questions
+            'questions' => 'required|array',
+            'questions.*.text' => 'required|string',
+            'questions.*.type' => 'required|string',
+            'questions.*.answers' => 'required|array',
+            'questions.*.correct' => 'required|integer',  // Ensure the correct field is set
+        ]);
 
-    // Save the questions for the quiz
-    foreach ($request->input('questions') as $questionData) {
-        $quiz->questions()->create($questionData);
+        // Log the validated data for debugging
+        \Log::info('Validated Quiz Data:', $validatedData);
+
+        // Create the quiz
+        $quiz = Quiz::create([
+            'title' => $validatedData['title'],
+            'time_limit' => $validatedData['time_limit'],  // Save time_limit
+            'number_of_questions' => $validatedData['number_of_questions'],  // Save number_of_questions
+            'teacher_id' => Auth::id(),  // Dynamically assign teacher_id
+        ]);
+
+        // Log successful quiz creation
+        \Log::info('Quiz Created:', ['quiz_id' => $quiz->id]);
+
+        // Save the questions for the quiz
+        foreach ($validatedData['questions'] as $questionData) {
+            $quiz->questions()->create([
+                'text' => $questionData['text'],
+                'type' => $questionData['type'],
+                'answers' => json_encode($questionData['answers']),  // Convert answers array to JSON
+                'correct' => $questionData['correct'],  // Save correct answer
+            ]);
+        }
+
+        return response()->json(['message' => 'Quiz created successfully!'], 201);
+
+    } catch (\Exception $e) {
+        // Log the error for debugging
+        \Log::error('Error creating quiz:', ['error' => $e->getMessage()]);
+
+        // Return a JSON error response with the 500 status code
+        return response()->json(['message' => 'Error creating quiz', 'error' => $e->getMessage()], 500);
     }
-
-    // Redirect back with success message
-    return redirect()->route('teacher.view-quizzes')->with('success', 'Quiz created successfully!');
 }
+
+
+
 
 // Method to view quizzes (for teachers)
 public function viewQuizzes()
@@ -107,20 +121,16 @@ public function viewQuizzes()
 }
 
 // Method to show details of a specific quiz
+// In your QuizController.php
 public function index()
-    {
-        // Fetch all quizzes from the database
-        $quizzes = Quiz::all();
-        return view('quiz', compact('quizzes'));
-    }
-
-    // Show the quiz details (and questions) when a quiz is selected
-    // In QuizController.php
-
-    public function show($id)
 {
-    return view('quiz-details', ['quizId' => $id]);
+    // Fetch all quizzes with the number of questions and time limit
+    $quizzes = Quiz::withCount('questions')->get(); // Adds `questions_count` to each quiz
+
+    // Pass quizzes with question count and time limit to the view
+    return view('quiz', compact('quizzes'));
 }
+
 
 
 
@@ -133,6 +143,27 @@ public function delete($quizId)
     return redirect()->route('teacher.view-quizzes')->with('success', 'Quiz deleted successfully!');
 }
 
+// In your QuizController.php
+public function show($id)
+{
+    // Fetch the quiz by its ID, along with its related questions
+    $quiz = Quiz::with('questions')->findOrFail($id);
+
+    // Pass the quiz and quiz ID to the view
+    return view('quiz-details', ['quiz' => $quiz, 'quizId' => $quiz->id]);
+}
+
+
+public function getQuiz($id)
+{
+    $quiz = Quiz::find($id);
+
+    if (!$quiz) {
+        return response()->json(['error' => 'Quiz not found'], 404);
+    }
+
+    return response()->json($quiz);
+}
 
 
 

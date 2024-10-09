@@ -53,7 +53,6 @@ export default {
   },
   computed: {
     parsedAnswers() {
-      // If answers are still a JSON string, parse them, otherwise return as is
       try {
         return typeof this.question.answers === 'string' ? JSON.parse(this.question.answers) : this.question.answers;
       } catch (e) {
@@ -73,10 +72,8 @@ export default {
 
       const index = this.userAnswer.indexOf(answer);
       if (index > -1) {
-        // Remove answer if already selected
         this.userAnswer.splice(index, 1);
       } else {
-        // Add answer if not selected
         this.userAnswer.push(answer);
       }
     },
@@ -85,12 +82,11 @@ export default {
         alert('Please provide an answer.');
         return;
       }
-
       this.$emit('answer', { index: this.index, answer: this.userAnswer });
       this.$emit('next-page');
     },
     skipQuestion() {
-      this.$emit('skip-question');
+      this.$emit('answer', { index: this.index, answer: null });
       this.$emit('next-page');
     }
   },

@@ -185,77 +185,108 @@
   
   <style scoped>
   .quiz-page-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  
-  .top-bar {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .progress-bar-container {
-    width: 80%;
-    background-color: #f3f3f3;
-    height: 10px;
-    border-radius: 5px;
-    overflow: hidden;
-  }
-  
-  .progress-bar .progress {
-    height: 100%;
-    background-color: #005f73; /* Dark blue color */
-  }
-  
-  .timer-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-  }
-  
-  .circle-timer {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    margin-bottom: 10px;
-  }
-  
-  .timer-text {
-    font-size: 18px;
-    color: #333;
-  }
-  
-  .button {
-    background-color: #005f73;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 20px;
-  }
-  
-  .button:hover {
-    background-color: #003b4a;
-  }
-  
-  /* Centering for question content */
-  .question-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.top-bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.progress-bar-container {
+  width: 80%;
+  background-color: #f3f3f3;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-bar .progress {
+  height: 100%;
+  background-color: #005f73; /* Dark blue color */
+}
+
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 10px;
+  right: 20px;
+}
+
+.circle-timer {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.timer-text {
+  font-size: 18px;
+  color: #333;
+}
+
+.button {
+  background-color: #007bff; /* Blue button color */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+  transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+
+.button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Centering for question content */
+.question-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Style the input fields */
+input[type="text"] {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 80%;
+  margin-bottom: 10px;
+}
+
+/* Style the skip and next buttons */
+button.skip,
+button.next {
+  background-color: #007bff; /* Blue */
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  margin: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button.skip:hover,
+button.next:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
   </style>
   

@@ -30,74 +30,47 @@ export default {
     apexchart: VueApexCharts,
   },
   props: ['questions', 'userAnswers', 'quizId'],
-  data() {
-    return {
-      scoreSaved: false, // Prevent multiple score submissions
-    };
-  },
   computed: {
     correctAnswers() {
-      if (!this.questions || !Array.isArray(this.questions) || !this.userAnswers) return 0;
+    return this.userAnswers.filter((answer, index) => {
+      const question = this.questions[index];
+      if (!question || answer === null || answer === undefined) return false;
+      
+      if (question.type === 'multi-choice') {
+        const userAnswerSet = new Set(answer.map(a => a.toLowerCase()));
+        const correctAnswerSet = new Set(question.answers.filter(a => a.correct).map(a => a.text.toLowerCase()));
+        return userAnswerSet.size === correctAnswerSet.size && [...userAnswerSet].every(ans => correctAnswerSet.has(ans));
+      } else {
+        return answer.toLowerCase() === question.correct.toLowerCase();
+      }
+    }).length;
+  },
 
-      return this.userAnswers.filter((answer, index) => {
-        const question = this.questions[index];
-        if (!question || !question.correct) return false;
+  skippedAnswers() {
+    // Count skipped answers, only those where the answer is explicitly skipped
+    return this.userAnswers.filter(answer => answer === null || answer === undefined).length;
+  },
 
-        if (answer === null || answer === undefined) return false; // Skipped
+  wrongAnswers() {
+    // Count wrong answers, making sure that skipped questions are not included
+    return this.userAnswers.filter((answer, index) => {
+      const question = this.questions[index];
+      
+      // If the question was skipped, it should not be counted as wrong
+      if (answer === null || answer === undefined) return false;
 
-        // Multiple-choice questions
-        if (question.type === 'multi-choice') {
-          const userAnswerSet = new Set(answer.map(a => a.toLowerCase()));
-          const correctAnswerSet = new Set(
-            question.answers
-              .filter(a => a.correct)
-              .map(a => a.text.toLowerCase())
-          );
-          return (
-            userAnswerSet.size === correctAnswerSet.size &&
-            [...userAnswerSet].every(ans => correctAnswerSet.has(ans))
-          );
-        }
-        // Single-choice or typing questions
-        else {
-          return answer.toString().trim().toLowerCase() === question.correct.toString().trim().toLowerCase();
-        }
-      }).length;
-    },
+      // Multi-choice questions
+      if (question.type === 'multi-choice') {
+        const userAnswerSet = new Set(answer.map(a => a.toLowerCase()));
+        const correctAnswerSet = new Set(question.answers.filter(a => a.correct).map(a => a.text.toLowerCase()));
+        return !(userAnswerSet.size === correctAnswerSet.size && [...userAnswerSet].every(ans => correctAnswerSet.has(ans)));
+      }
 
-    skippedAnswers() {
-      if (!this.userAnswers) return 0;
-      return this.userAnswers.filter(answer => answer === null || answer === undefined).length;
-    },
+      // Single-choice or typing questions
+      return answer.toLowerCase() !== question.correct.toLowerCase();
+    }).length;
+  },
 
-    wrongAnswers() {
-      if (!this.questions || !this.userAnswers || !Array.isArray(this.questions) || !Array.isArray(this.userAnswers)) return 0;
-
-      return this.userAnswers.filter((answer, index) => {
-        const question = this.questions[index];
-        if (!question || !question.correct) return false;
-
-        if (answer === null || answer === undefined) return true; // Skipped answers are considered wrong
-
-        // Multi-choice
-        if (question.type === 'multi-choice') {
-          const userAnswerSet = new Set(answer.map(a => a.toLowerCase()));
-          const correctAnswerSet = new Set(
-            question.answers
-              .filter(a => a.correct)
-              .map(a => a.text.toLowerCase())
-          );
-          return !(
-            userAnswerSet.size === correctAnswerSet.size &&
-            [...userAnswerSet].every(ans => correctAnswerSet.has(ans))
-          );
-        }
-        // Single-choice or typing questions
-        else {
-          return answer.toString().trim().toLowerCase() !== question.correct.toString().trim().toLowerCase();
-        }
-      }).length;
-    },
 
     chartSeries() {
       return [this.correctAnswers, this.wrongAnswers + this.skippedAnswers];
@@ -121,41 +94,42 @@ export default {
           position: 'bottom',
         },
       };
-    },
+    }
   },
 
   methods: {
-    goToSummary() {
-      this.$emit('go-to-summary');
-    },
-
-    submitScore() {
-      // Prevent multiple submissions
-      if (!this.scoreSaved) {
-        this.scoreSaved = true;
-        axios
-          .post('/save-score', {
-            score: this.correctAnswers, // Send only correct answers to score table
-            quiz_id: this.quizId,
-          })
-          .then(response => {
-            console.log('Score saved successfully:', response.data);
-          })
-          .catch(error => {
-            console.error(
-              'Error saving score:',
-              error.response ? error.response.data : error.message
-            );
-          });
-      }
-    },
+  goToSummary() {
+    this.$emit('go-to-summary');
   },
 
-  mounted() {
-    // Ensure score is only submitted once, at the end of the quiz
+  submitScore() {
+    // Ensure score is saved only once at the end of the quiz
     if (!this.scoreSaved) {
-      this.submitScore();
+      this.scoreSaved = true;
+      axios
+        .post('/save-score', {
+          score: this.correctAnswers, // Send only correct answers
+          quiz_id: this.quizId,
+        })
+        .then(response => {
+          console.log('Score saved successfully:', response.data);
+        })
+        .catch(error => {
+          console.error(
+            'Error saving score:',
+            error.response ? error.response.data : error.message
+          );
+        });
     }
-  },
+  }
+},
+
+mounted() {
+  // Ensure score is only submitted once, after quiz completion
+  if (!this.scoreSaved) {
+    this.submitScore();
+  }
+}
+
 };
 </script>

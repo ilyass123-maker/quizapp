@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,13 +8,12 @@ class Quiz extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'teacher_id'];
+    // Allow mass assignment of these fields
+    protected $fillable = ['title', 'time_limit', 'number_of_questions', 'teacher_id'];
 
-    // In App\Models\Quiz.php
-
-public function questions()
-{
-    return $this->hasMany(Question::class);  // Assuming a Quiz has many Questions
-}
-
+    // Quiz has many questions
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
 }

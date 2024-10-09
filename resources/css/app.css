@@ -1,29 +1,170 @@
-/* Sidebar styling for consistent width */
-.settings-widget {
-    background-color: #fff;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+  }
+  
+  h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  p {
+    font-size: 18px;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  /* Centering the content */
+  .quiz-page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  
+  .question-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 20px;
+    right: 40px;
+  }
+  
+  .circle-timer {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+  }
+  
+  .timer-text {
+    font-size: 18px;
+    color: #333;
+  }
+  
+  /* Progress Bar */
+  .progress-bar-container {
+    width: 80%;
+    background-color: #f3f3f3;
+    height: 10px;
     border-radius: 5px;
-}
-
-/* Center Teacher Dashboard content */
-.settings-inner-blk {
-    text-align: center;  /* Center the content horizontally */
-}
-
-.buttons a {
-    margin: 5px;  /* Add spacing between buttons */
-}
-
-/* Ensure sidebar and main content align properly */
-@media (max-width: 768px) {
-    .settings-widget {
-        margin-bottom: 20px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  
+  .progress-bar .progress {
+    height: 100%;
+    background-color: #007bff; /* Blue for progress */
+  }
+  
+  /* Styling Answer Buttons */
+  button.skip, button.next {
+    background-color: #007bff; /* Blue */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    margin: 10px 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button.skip:hover, button.next:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+  }
+  
+  input[type="radio"] {
+    margin-right: 5px;
+  }
+  
+  label {
+    font-size: 16px;
+    margin-right: 10px;
+  }
+  
+  /* Multiple Choice List */
+  ul {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+  }
+  
+  ul li {
+    display: inline-block;
+    margin: 5px;
+  }
+  
+  ul li label {
+    padding: 10px 15px;
+    background-color: #f3f3f3;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  ul li label:hover {
+    background-color: #e0e0e0;
+  }
+  
+  /* Styling the input text field */
+  input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 80%;
+    margin-bottom: 20px;
+  }
+  
+  /* Submit and Action Buttons */
+  button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 768px) {
+    .progress-bar-container {
+      width: 100%;
     }
-}
-
-/* Ensure sidebar sticks correctly in layout */
-.theiaStickySidebar {
-    position: relative;
-    top: 0;
-}
+  
+    .timer-container {
+      top: 10px;
+      right: 20px;
+    }
+  
+    h2 {
+      font-size: 22px;
+    }
+  
+    p {
+      font-size: 16px;
+    }
+  }
+  

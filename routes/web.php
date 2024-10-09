@@ -87,7 +87,8 @@ Route::get('/quizzes/{quizId}/questions', function ($quizId) {
 })->middleware('auth');
 
 // Route for saving quiz scores
-Route::post('/quiz/save-score', [QuizController::class, 'saveScore'])->name('save-score');
+Route::post('/save-score', [QuizController::class, 'saveScore'])->name('save-score');
+
 
 
 // Password reset routes

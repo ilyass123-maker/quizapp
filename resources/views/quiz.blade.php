@@ -1,4 +1,3 @@
-<!-- quiz.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -98,6 +97,7 @@
                                     <tr>
                                         <th>Quiz Title</th>
                                         <th>Questions</th>
+                                        <th>Time Limit (mins)</th> <!-- Added Time Limit Column -->
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -106,7 +106,8 @@
                                     @foreach($quizzes as $quiz)
                                     <tr>
                                         <td>{{ $quiz->title }}</td>
-                                        <td>{{ $quiz->questions_count ?? '10' }}</td> <!-- Assuming you store number of questions -->
+                                        <td>{{ $quiz->questions_count }}</td> <!-- Display number of questions -->
+                                        <td>{{ $quiz->time_limit ?? 'N/A' }}</td> <!-- Display time limit -->
                                         <td>
                                             <!-- Link to detail quiz page -->
                                             <a href="{{ route('quiz.details', ['id' => $quiz->id]) }}" class="btn btn-primary">Start Quiz</a>

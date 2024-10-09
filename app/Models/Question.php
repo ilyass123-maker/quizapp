@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +8,11 @@ class Question extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['quiz_id', 'text', 'type', 'answers', 'correct']; // Update here to match your fields
+    protected $fillable = ['quiz_id', 'text', 'type', 'answers', 'correct'];
+
+    protected $casts = [
+        'answers' => 'array',  // Cast 'answers' to an array
+    ];
 
     public function quiz()
     {
