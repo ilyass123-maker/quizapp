@@ -60,55 +60,61 @@ public function showCreateQuizForm()
 public function storeQuizWithQuestions(Request $request)
 {
     try {
-        // Log the incoming data for debugging
         \Log::info('Incoming Quiz Data:', $request->all());
 
         // Validate the request data
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
-            'time_limit' => 'nullable|integer',  // Validate time_limit
-            'number_of_questions' => 'required|integer',  // Validate number_of_questions
+            'time_limit' => 'nullable|integer',
+            'number_of_questions' => 'required|integer',
             'questions' => 'required|array',
             'questions.*.text' => 'required|string',
             'questions.*.type' => 'required|string',
-            'questions.*.answers' => 'required|array',
-            'questions.*.correct' => 'required|integer',  // Ensure the correct field is set
+            'questions.*.correct' => 'required',
+            'questions.*.answers' => 'nullable|array', // Allow answers to be nullable for typing questions
         ]);
 
-        // Log the validated data for debugging
         \Log::info('Validated Quiz Data:', $validatedData);
 
         // Create the quiz
         $quiz = Quiz::create([
             'title' => $validatedData['title'],
-            'time_limit' => $validatedData['time_limit'],  // Save time_limit
-            'number_of_questions' => $validatedData['number_of_questions'],  // Save number_of_questions
-            'teacher_id' => Auth::id(),  // Dynamically assign teacher_id
+            'time_limit' => $validatedData['time_limit'],
+            'number_of_questions' => $validatedData['number_of_questions'],
+            'teacher_id' => Auth::id(),
         ]);
 
-        // Log successful quiz creation
         \Log::info('Quiz Created:', ['quiz_id' => $quiz->id]);
 
         // Save the questions for the quiz
         foreach ($validatedData['questions'] as $questionData) {
+            // Handle the correct answer based on question type
+            if ($questionData['type'] === 'typing') {
+                // For typing questions, no answers array is needed
+                $correctAnswer = $questionData['correct'];
+                $answers = ''; // Insert an empty string for answers
+            } else {
+                // For non-typing questions, encode the answers array as JSON
+                $correctAnswer = (int)$questionData['correct'];
+                $answers = json_encode($questionData['answers']); // Encode answers as JSON
+            }
+
+            // Save the question
             $quiz->questions()->create([
                 'text' => $questionData['text'],
                 'type' => $questionData['type'],
-                'answers' => json_encode($questionData['answers']),  // Convert answers array to JSON
-                'correct' => $questionData['correct'],  // Save correct answer
+                'answers' => $answers, // Use the empty string for typing questions
+                'correct' => $correctAnswer, // Store correct answer based on the question type
             ]);
         }
 
         return response()->json(['message' => 'Quiz created successfully!'], 201);
-
     } catch (\Exception $e) {
-        // Log the error for debugging
         \Log::error('Error creating quiz:', ['error' => $e->getMessage()]);
-
-        // Return a JSON error response with the 500 status code
         return response()->json(['message' => 'Error creating quiz', 'error' => $e->getMessage()], 500);
     }
 }
+
 
 
 

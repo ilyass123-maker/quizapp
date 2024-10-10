@@ -57,6 +57,18 @@
           </select>
         </div>
 
+        <!-- Display correct answer input for typing questions -->
+        <div v-if="question.type === 'typing'" class="form-group">
+          <label>Correct Answer</label>
+          <input
+            type="text"
+            v-model="question.correctAnswer"
+            class="form-control"
+            placeholder="Enter the correct answer"
+            required
+          />
+        </div>
+
         <!-- Display possible answers for non-typing questions -->
         <div v-if="question.type !== 'typing'" class="form-group">
           <label>Possible Answers</label>
@@ -68,7 +80,7 @@
               placeholder="Enter answer text"
             />
             <label>
-              <input type="radio" v-model="question.correct" :value="ansIndex" /> Correct
+              <input type="radio" v-model="question.correctAnswer" :value="ansIndex" /> Correct
             </label>
           </div>
           <button
@@ -108,7 +120,7 @@ export default {
           text: '',
           type: 'single-choice',
           answers: ['', '', '', ''], // Pre-define 4 answer slots
-          correct: null, // Index of correct answer
+          correctAnswer: null, // This will hold the correct answer (index or value depending on type)
         },
       ],
     };
@@ -119,7 +131,7 @@ export default {
         text: '',
         type: 'single-choice',
         answers: ['', '', '', ''], // Add 4 empty answers by default
-        correct: null, // Reset correct answer
+        correctAnswer: null, // Reset correct answer
       });
     },
     removeQuestion(index) {
@@ -129,46 +141,48 @@ export default {
       this.questions[questionIndex].answers.push(''); // Add an empty answer field
     },
     async submitQuiz() {
-  const formData = {
-    title: this.quizTitle,
-    time_limit: this.quizTimeLimit || 7,  // Default to 7 if not set
-    number_of_questions: this.questions.length,  // Dynamically calculate
-    questions: JSON.parse(JSON.stringify(this.questions)),  // Convert Vue proxy to plain object
-  };
+      // Prepare form data to submit
+      const formData = {
+        title: this.quizTitle,
+        time_limit: this.quizTimeLimit || 7,  // Default to 7 if not set
+        number_of_questions: this.questions.length,
+        questions: this.questions.map(question => {
+          return {
+            ...question,
+            correct: question.type === 'typing' 
+              ? question.correctAnswer // Use string for typing questions
+              : parseInt(question.correctAnswer), // Ensure integer for non-typing questions
+          };
+        }),
+      };
 
-  console.log('Submitting form data:', formData);  // Check the formData in the console
+      console.log('Submitting form data:', formData);
 
-  try {
-    const response = await fetch('/teacher/create-quiz', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document
-          .querySelector('meta[name="csrf-token"]')
-          .getAttribute('content'),
-      },
-      body: JSON.stringify(formData),
-    });
+      try {
+        const response = await fetch('/teacher/create-quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document
+              .querySelector('meta[name="csrf-token"]')
+              .getAttribute('content'),
+          },
+          body: JSON.stringify(formData),
+        });
 
-    if (response.ok) {
-      const responseData = await response.json();
-      alert(responseData.message);
-    } else {
-      const errorData = await response.json();
-      console.error('Error creating quiz:', errorData);
-      alert('Error creating quiz: ' + errorData.message);
-    }
-  } catch (error) {
-    console.error('Submission error:', error);
-    alert('Error submitting quiz');
-  }
-}
-
-
-
-
-
-,
+        if (response.ok) {
+          const responseData = await response.json();
+          alert(responseData.message);
+        } else {
+          const errorData = await response.json();
+          console.error('Error creating quiz:', errorData);
+          alert('Error creating quiz: ' + errorData.message);
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        alert('Error submitting quiz');
+      }
+    },
   },
 };
 </script>
