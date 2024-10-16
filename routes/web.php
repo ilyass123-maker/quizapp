@@ -104,3 +104,16 @@ Route::fallback(function () {
 Route::get('/teacher/welcome', function () {
     return view('teacher.welcome-teacher'); // Ensure this points to the correct Blade file in 'resources/views/teacher/'
 })->name('welcome-teacher')->middleware('auth');
+// AI Quiz Generation route
+// AI Quiz Generation route
+// GET route for showing the AI Quiz form
+// Route for generating the AI quiz (for rendering the form)
+Route::get('/teacher/ai-quiz', [QuizController::class, 'showAIQuizForm'])->name('teacher.ai-quiz');
+
+// Route for generating a question (invokes the generateQuestion method)
+use App\Http\Controllers\GeminiController;
+
+
+Route::post('/generate-quiz', [GeminiController::class, 'generateQuiz'])->name('generate.quiz');
+
+Route::post('/save-quiz', [GeminiController::class, 'saveQuiz'])->name('save.quiz');

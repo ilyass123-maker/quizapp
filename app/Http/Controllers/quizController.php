@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Quiz;
+use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
+
+use App\Services\GeminiApiService;
+
 
 	
 class QuizController extends Controller
@@ -170,7 +175,12 @@ public function getQuiz($id)
 
     return response()->json($quiz);
 }
-
+// Add this to QuizController.php
+public function showAIQuizForm()
+{
+    $user = Auth::user();  // Assuming you want to access the authenticated user's name
+    return view('teacher.ai-quiz', compact('user'));
+}
 
 
 }
