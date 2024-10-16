@@ -117,3 +117,7 @@ use App\Http\Controllers\GeminiController;
 Route::post('/generate-quiz', [GeminiController::class, 'generateQuiz'])->name('generate.quiz');
 
 Route::post('/save-quiz', [GeminiController::class, 'saveQuiz'])->name('save.quiz');
+
+
+Route::post('/proxy/generate-quiz', [GeminiController::class, 'proxyGenerateQuiz']);
+Route::post('/log-gemini-response', [GeminiController::class, 'logGeminiResponse']);

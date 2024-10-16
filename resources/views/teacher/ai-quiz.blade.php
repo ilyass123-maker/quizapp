@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Quiz Generator</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>AI Quiz Generator</title>
     <style>
         .container {
             max-width: 600px;
@@ -25,83 +25,51 @@
             margin-top: 20px;
         }
     </style>
-    <!-- Include your CSS stylesheets -->
-    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 </head>
 <body>
-    <!-- Main Wrapper -->
-    <div id="app" class="main-wrapper">
-        <!-- Header -->
-        @include('layouts.header') <!-- Include Blade layout for header -->
+    <div class="container">
+        <div id="app">
+            <h1>AI Quiz Generator</h1>
+            <div class="input-container">
+                <!-- Input for quiz title -->
+                <input v-model="title" placeholder="Enter quiz title (e.g., Physics Quiz)" />
 
-        <!-- Page Content -->
-        <div class="page-content">
-            <div class="container">
-                <div class="row">
-                    <!-- Sidebar -->
-                    <div class="col-xl-3 col-lg-4 col-md-12">
-                        @include('layouts.sidebar') <!-- Include Blade layout for sidebar -->
-                    </div>
+                <!-- Input for subject -->
+                <input v-model="subject" placeholder="Enter subject (e.g., Physics, Math)" />
 
-                    <!-- Main Content -->
-                    <div class="col-xl-9 col-lg-8 col-md-12">
-                        <div class="settings-widget">
-                            <div class="settings-inner-blk p-3">
-                                <h2>AI Quiz Generator</h2>
+                <!-- Input for time limit -->
+                <input type="number" v-model="timeLimit" placeholder="Enter time limit in minutes" />
 
-                                <div class="input-container">
-                                    <!-- Input for quiz title -->
-                                    <input v-model="title" placeholder="Enter quiz title (e.g., Physics Quiz)" class="form-control mb-3" />
+                <!-- Input for number of questions -->
+                <input type="number" v-model="numQuestions" placeholder="Enter number of questions" />
 
-                                    <!-- Input for subject -->
-                                    <input v-model="subject" placeholder="Enter subject (e.g., Physics, Math)" class="form-control mb-3" />
+                <!-- Button to trigger content generation -->
+                <button @click="generateQuiz">Generate Quiz</button>
+            </div>
 
-                                    <!-- Input for time limit -->
-                                    <input type="number" v-model="timeLimit" placeholder="Enter time limit in minutes" class="form-control mb-3" />
+            <!-- Loading, Error, and Response Messages -->
+            <div v-if="loading" class="loading">
+                <p>Loading...</p>
+            </div>
 
-                                    <!-- Input for number of questions -->
-                                    <input type="number" v-model="numQuestions" placeholder="Enter number of questions" class="form-control mb-3" />
+            <div v-if="errorMessage" class="error">
+                <p>Error: @{{ errorMessage }}</p>
+            </div>
 
-                                    <!-- Button to trigger content generation -->
-                                    <button @click="generateQuiz" class="btn btn-primary">Generate Quiz</button>
-                                </div>
-
-                                <!-- Loading, Error, and Response Messages -->
-                                <div v-if="loading" class="loading mt-3">
-                                    <p>Loading...</p>
-                                </div>
-
-                                <div v-if="errorMessage" class="alert alert-danger mt-3">
-                                    <p>Error: @{{ errorMessage }}</p>
-                                </div>
-
-                                <div v-if="quiz.length" class="response mt-4">
-                                    <h3>Generated Quiz</h3>
-                                    <div v-for="(question, index) in quiz" :key="index">
-                                        <p><strong>Question @{{ index + 1 }}:</strong> @{{ question.text }}</p>
-                                        <p><strong>Answers:</strong> @{{ question.answers }}</p>
-                                        <p><strong>Correct Answer:</strong> @{{ question.correct }}</p>
-                                        <hr>
-                                    </div>
-                                </div>
-
-                                <!-- Button to save the quiz to the backend -->
-                                <button @click="saveQuiz" v-if="quiz.length" class="btn btn-success mt-3">Save Quiz</button>
-                            </div>
-                        </div>
-                    </div>
+            <div v-if="quiz.length" class="response">
+                <h2>Generated Quiz</h2>
+                <div v-for="(question, index) in quiz" :key="index">
+                    <p><strong>Question @{{ index + 1 }}:</strong> @{{ question.text || 'Question not found' }}</p> <!-- Handle missing question text -->
+                    <p><strong>Answers:</strong> @{{ question.answers.join(', ') }}</p>
+                    <p><strong>Correct Answer:</strong> @{{ question.correct || 'Correct answer not found' }}</p>
+                    <hr>
                 </div>
             </div>
+
+            <!-- Button to save the quiz to the backend -->
+            <button @click="saveQuiz" v-if="quiz.length">Save Quiz</button>
         </div>
-
-        <!-- Footer -->
-        @include('layouts.footer') <!-- Include Blade layout for footer -->
     </div>
-    <!-- /Main Wrapper -->
-
-    <!-- Include any other scripts if needed -->
-    <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Include Vue.js and Axios from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
@@ -151,7 +119,23 @@
                                     {
                                         parts: [
                                             {
-                                                text: `Create a question about ${this.subject}. You can choose the type of question (e.g., multiple choice, single choice, typing) and provide answers. Format the response like this: \n\n 1. Question text: \n 2. Type: \n 3. Answer options: Provide appropriate options in a list format \n 4. Correct answer: Indicate the correct option(s).`
+                                                text: `Please generate a question related to the subject: ${this.subject}.
+                                                    Include 4 answer options labeled a, b, c, and d.
+                                                    Ensure that the correct answer is **one of the four options**.
+                                                    The correct answer should be formatted as one of the options,.
+                                                    Return the information in the following format:
+
+**Question:**
+Write the question here.
+
+**Options:**
+a) Option A
+b) Option B
+c) Option C
+d) Option D
+
+**Correct Answer:**
+Place the correct answer here(just the answer no explenation).`
                                             }
                                         ]
                                     }
@@ -171,15 +155,29 @@
                             if (res.ok && result.candidates && result.candidates.length > 0) {
                                 const generatedContent = result.candidates[0].content.parts[0].text;
 
+                                // Split lines by newlines to capture each part (question, options, correct answer)
                                 const lines = generatedContent.split("\n");
-                                const questionText = lines[0].replace("1. Question text: ", "");
-                                const answers = lines[2].replace("3. Answer options: ", "");
-                                const correctAnswer = lines[3].replace("4. Correct answer: ", "");
 
+                                // Extract the question (the line immediately after the **Question:** marker)
+                                const questionIndex = lines.findIndex(line => line.startsWith("**Question:**"));
+                                const questionText = questionIndex !== -1 ? lines[questionIndex + 1].trim() : 'Question not found';
+
+                                // Extract the options (lines starting with "a)", "b)", "c)", "d)")
+                                const answerOptions = lines.filter(line => line.startsWith("a)") || line.startsWith("b)") || line.startsWith("c)") || line.startsWith("d)"))
+                                    .map(line => line.trim()) || ['Options not found'];
+
+                                // Extract the correct answer (the line immediately after the **Correct Answer:** marker)
+                                const correctAnswerIndex = lines.findIndex(line => line.startsWith("**Correct Answer:**"));
+                                const correctAnswer = correctAnswerIndex !== -1 ? lines[correctAnswerIndex + 1].trim() : 'Correct answer not found';
+
+                                // Ensure the correct answer is one of the provided options
+                                const validCorrectAnswer = answerOptions.find(option => option.includes(correctAnswer)) || 'Correct answer not found';
+
+                                // Push the generated question into the quiz array
                                 this.quiz.push({
-                                    text: questionText,
-                                    answers: answers,
-                                    correct: correctAnswer
+                                    text: questionText || 'Question not found', // Ensure question text is not empty
+                                    answers: answerOptions,
+                                    correct: validCorrectAnswer // Use the correct answer that matches one of the options
                                 });
                             } else {
                                 this.errorMessage = 'Failed to generate one or more questions. Please try again.';
@@ -196,12 +194,17 @@
                 // Save the generated quiz to the backend
                 async saveQuiz() {
                     try {
+                        const formattedQuiz = this.quiz.map(question => ({
+                            ...question,
+                            answers: question.answers.join(', ') // Join the array into a single string
+                        }));
+
                         const response = await axios.post('/save-quiz', {
                             title: this.title,
                             subject: this.subject,
                             time_limit: this.timeLimit,
                             number_of_questions: this.numQuestions,
-                            questions: this.quiz
+                            questions: formattedQuiz
                         });
 
                         if (response.status === 201) {

@@ -13,44 +13,56 @@ class GeminiController extends Controller
     public function saveQuiz(Request $request)
     {
         try {
-            // Log the incoming request data for debugging
-            Log::info('Incoming quiz data:', $request->all());
+            $teacherId = Auth::id();
 
-            // Validate the incoming request data with correct min rule syntax
-            $validatedData = $request->validate([
-                'title' => 'required|string|max:255',
-                'subject' => 'required|string',
-                'time_limit' => 'nullable|integer',
-                'number_of_questions' => 'required|integer|min:1',  // Corrected validation rule
+            // Validate incoming data
+            $data = $request->validate([
+                'title' => 'required|string',
+                'time_limit' => 'required|integer',
+                'number_of_questions' => 'required|integer',
                 'questions' => 'required|array',
                 'questions.*.text' => 'required|string',
                 'questions.*.answers' => 'required|string',
                 'questions.*.correct' => 'required|string',
             ]);
 
-            // Create the quiz with the currently logged-in teacher's ID
+            // Create new quiz
             $quiz = Quiz::create([
-                'title' => $validatedData['title'],
-                'time_limit' => $validatedData['time_limit'],
-                'number_of_questions' => $validatedData['number_of_questions'],
-                'teacher_id' => Auth::id(),  // Get the currently logged-in teacher's ID
+                'title' => $data['title'],
+                'time_limit' => $data['time_limit'],
+                'number_of_questions' => $data['number_of_questions'],
+                'teacher_id' => $teacherId
             ]);
 
-            // Save each question
-            foreach ($validatedData['questions'] as $questionData) {
-                $quiz->questions()->create([
+            // Save questions
+            foreach ($data['questions'] as $questionData) {
+                $question = new Question([
                     'text' => $questionData['text'],
                     'answers' => $questionData['answers'],
                     'correct' => $questionData['correct'],
                 ]);
+                $quiz->questions()->save($question);
             }
 
-            return response()->json(['message' => 'Quiz created successfully!', 'quiz_id' => $quiz->id], 201);
+            return response()->json(['message' => 'Quiz saved successfully!'], 201);
         } catch (\Exception $e) {
-            // Log the error for debugging
-            Log::error('Error saving quiz:', ['error' => $e->getMessage()]);
-
-            return response()->json(['message' => 'Failed to save quiz', 'error' => $e->getMessage()], 500);
+            Log::error('Error saving quiz: ' . $e->getMessage());
+            return response()->json(['error' => 'Error saving quiz'], 500);
         }
+    }
+
+    public function logGeminiResponse(Request $request)
+    {
+        // Log the entire request data including the full Gemini API response
+        Log::info('Gemini API Response:', [
+            'title' => $request->input('title'),
+            'subject' => $request->input('subject'),
+            'time_limit' => $request->input('time_limit'),
+            'number_of_questions' => $request->input('number_of_questions'),
+            'questions' => $request->input('questions'),
+            'geminiResponse' => $request->input('geminiResponse'),  // Log the full Gemini API response
+        ]);
+
+        return response()->json(['message' => 'Logged successfully!'], 200);
     }
 }
