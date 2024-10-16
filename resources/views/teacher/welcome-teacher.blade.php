@@ -41,6 +41,9 @@
 
                                     <!-- Button to view teacher's quizzes -->
                                     <a href="{{ route('teacher.view-quizzes') }}" class="btn btn-secondary mb-2">View My Quizzes</a>
+
+                                    <!-- New AI Quiz button -->
+                                    <a href="{{ route('teacher.ai-quiz') }}" class="btn btn-info mb-2">Create AI Quiz</a> <!-- AI Quiz button added -->
                                 </div>
 
                                 <!-- Additional teacher-specific data/content can be added here -->

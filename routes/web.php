@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\GeminiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -104,3 +105,17 @@ Route::fallback(function () {
 Route::get('/teacher/welcome', function () {
     return view('teacher.welcome-teacher'); // Ensure this points to the correct Blade file in 'resources/views/teacher/'
 })->name('welcome-teacher')->middleware('auth');
+
+// Protect the AI Quiz form with auth middleware
+Route::get('/teacher/ai-quiz', [QuizController::class, 'showAIQuizForm'])
+    ->name('teacher.ai-quiz')
+    ->middleware('auth');
+
+// Protect the routes for generating and saving quizzes
+Route::post('/generate-quiz', [GeminiController::class, 'generateQuiz'])
+    ->name('generate.quiz')
+    ->middleware('auth');
+
+Route::post('/save-quiz', [GeminiController::class, 'saveQuiz'])
+    ->name('save.quiz')
+    ->middleware('auth');

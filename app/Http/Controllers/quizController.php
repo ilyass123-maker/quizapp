@@ -165,6 +165,11 @@ public function getQuiz($id)
     return response()->json($quiz);
 }
 
+public function showAIQuizForm()
+{
+    $user = Auth::user();  // Assuming you want to access the authenticated user's name
+    return view('teacher.ai-quiz', compact('user'));
+}
 
 
 }
