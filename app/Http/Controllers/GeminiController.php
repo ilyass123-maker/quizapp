@@ -11,45 +11,51 @@ use Illuminate\Support\Facades\Log;
 class GeminiController extends Controller
 {
     public function saveQuiz(Request $request)
-    {
-        try {
-            $teacherId = Auth::id();
+{
+    try {
+        $teacherId = Auth::id();
 
-            // Validate incoming data
-            $data = $request->validate([
-                'title' => 'required|string',
-                'time_limit' => 'required|integer',
-                'number_of_questions' => 'required|integer',
-                'questions' => 'required|array',
-                'questions.*.text' => 'required|string',
-                'questions.*.answers' => 'required|string',
-                'questions.*.correct' => 'required|string',
+        // Validate incoming data
+        $data = $request->validate([
+            'title' => 'required|string',
+            'time_limit' => 'required|integer',
+            'number_of_questions' => 'required|integer',
+            'questions' => 'required|array',
+            'questions.*.text' => 'required|string',
+            'questions.*.answers' => 'required|array', // Expect an array
+            'questions.*.correct' => 'required|string',
+        ]);
+
+        // Create new quiz
+        $quiz = Quiz::create([
+            'title' => $data['title'],
+            'time_limit' => $data['time_limit'],
+            'number_of_questions' => $data['number_of_questions'],
+            'teacher_id' => $teacherId
+        ]);
+
+        // Save questions
+        foreach ($data['questions'] as $questionData) {
+            // Log the answers to confirm they're correct before saving
+            Log::info('Answers received: ', $questionData['answers']);
+
+            // Save the question directly without encoding the answers
+            $question = new Question([
+                'text' => $questionData['text'],
+                'answers' => $questionData['answers'], // Save as received
+                'correct' => $questionData['correct'],
             ]);
-
-            // Create new quiz
-            $quiz = Quiz::create([
-                'title' => $data['title'],
-                'time_limit' => $data['time_limit'],
-                'number_of_questions' => $data['number_of_questions'],
-                'teacher_id' => $teacherId
-            ]);
-
-            // Save questions
-            foreach ($data['questions'] as $questionData) {
-                $question = new Question([
-                    'text' => $questionData['text'],
-                    'answers' => $questionData['answers'],
-                    'correct' => $questionData['correct'],
-                ]);
-                $quiz->questions()->save($question);
-            }
-
-            return response()->json(['message' => 'Quiz saved successfully!'], 201);
-        } catch (\Exception $e) {
-            Log::error('Error saving quiz: ' . $e->getMessage());
-            return response()->json(['error' => 'Error saving quiz'], 500);
+            $quiz->questions()->save($question);
         }
+
+        return response()->json(['message' => 'Quiz saved successfully!'], 201);
+    } catch (\Exception $e) {
+        Log::error('Error saving quiz: ' . $e->getMessage());
+        return response()->json(['error' => 'Error saving quiz'], 500);
     }
+}
+
+
 
     public function logGeminiResponse(Request $request)
     {
