@@ -90,32 +90,32 @@ new Vue({
     },
     methods: {
         async generateQuiz() {
-            // Basic validation
-            if (!this.title || !this.subject || this.numQuestions < 1) {
-                this.errorMessage = "Please fill all fields correctly!";
-                return;
-            }
+    // Basic validation
+    if (!this.title || !this.subject || this.numQuestions < 1) {
+        this.errorMessage = "Please fill all fields correctly!";
+        return;
+    }
 
-            // Reset state
-            this.loading = true;
-            this.quiz = [];
-            this.errorMessage = null;
+    // Reset state
+    this.loading = true;
+    this.quiz = [];
+    this.errorMessage = null;
 
-            const apiKey = 'AIzaSyAdJXBzCx0bZsG7dFRYotjZsZK-fsfq3Xc'; // Replace with your actual API key
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const apiKey = 'AIzaSyAdJXBzCx0bZsG7dFRYotjZsZK-fsfq3Xc'; // Replace with your actual API key
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-            try {
-                // Loop to generate multiple questions
-                for (let i = 0; i < this.numQuestions; i++) {
-                    const data = {
-                        contents: [
+    try {
+        // Loop to generate multiple questions
+        for (let i = 0; i < this.numQuestions; i++) {
+            const data = {
+                contents: [
+                    {
+                        parts: [
                             {
-                                parts: [
-                                    {
-                                        text: `Please generate a question related to the subject: ${this.subject}.
-                                            Include 4 answer options labeled a, b, c, and d.
-                                            Ensure that the correct answer is one of the four options.
-                                            Return the information in the following format:
+                                text: `Please generate a question related to the subject: ${this.subject}.
+                                    Include 3 answer options labeled a, b, and c.
+                                    Ensure that the correct answer is one of the three options.
+                                    Return the information in the following format:
 
 **Question:**
 Write the question here.
@@ -124,62 +124,62 @@ Write the question here.
 a) Option A
 b) Option B
 c) Option C
-d) Option D
 
 **Correct Answer:**
 Place the correct answer here (just the answer, no explanation).`
-                                    }
-                                ]
                             }
                         ]
-                    };
-
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    });
-
-                    const result = await res.json();
-
-                    if (res.ok && result.candidates && result.candidates.length > 0) {
-                        const generatedContent = result.candidates[0].content.parts[0].text;
-                        const lines = generatedContent.split("\n");
-
-                        // Extract the question text from the line after the **Question:** marker
-                        const questionIndex = lines.findIndex(line => line.includes("**Question:**"));
-                        const questionText = (questionIndex !== -1 && lines[questionIndex + 1]) ? lines[questionIndex + 1].trim() : '';
-
-                        // Extract the options (lines starting with "a)", "b)", "c)", "d)")
-                        const answerOptions = lines.filter(line => line.startsWith("a)") || line.startsWith("b)") || line.startsWith("c)") || line.startsWith("d)"))
-                            .map(line => line.slice(3).trim()); // Remove "a)", "b)", etc.
-
-                        // Extract the correct answer from two lines after the **Correct Answer:** marker
-                        const correctAnswerIndex = lines.findIndex(line => line.includes("**Correct Answer:**"));
-                        const correctAnswer = (correctAnswerIndex !== -1 && lines[correctAnswerIndex + 2]) ? lines[correctAnswerIndex + 2].trim() : '';
-
-                        // Ensure the correct answer matches one of the provided options
-                        const validCorrectAnswer = answerOptions.find(option => option.includes(correctAnswer)) || '';
-
-                        // Push the formatted question into the quiz array
-                        this.quiz.push({
-                            text: questionText,
-                            answers: answerOptions,
-                            correct: validCorrectAnswer
-                        });
-                    } else {
-                        this.errorMessage = 'Failed to generate one or more questions. Please try again.';
-                        break;
                     }
-                }
-            } catch (err) {
-                this.errorMessage = 'Error: ' + err.message;
-            } finally {
-                this.loading = false;
+                ]
+            };
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            if (res.ok && result.candidates && result.candidates.length > 0) {
+                const generatedContent = result.candidates[0].content.parts[0].text;
+                const lines = generatedContent.split("\n");
+
+                // Extract the question text from the line after the **Question:** marker
+                const questionIndex = lines.findIndex(line => line.includes("**Question:**"));
+                const questionText = (questionIndex !== -1 && lines[questionIndex + 1]) ? lines[questionIndex + 1].trim() : '';
+
+                // Extract the options (lines starting with "a)", "b)", "c)")
+                const answerOptions = lines.filter(line => line.startsWith("a)") || line.startsWith("b)") || line.startsWith("c)"))
+                    .map(line => line.slice(3).trim()); // Remove "a)", "b)", etc.
+
+                // Extract the correct answer from two lines after the **Correct Answer:** marker
+                const correctAnswerIndex = lines.findIndex(line => line.includes("**Correct Answer:**"));
+                const correctAnswer = (correctAnswerIndex !== -1 && lines[correctAnswerIndex + 2]) ? lines[correctAnswerIndex + 2].trim() : '';
+
+                // Ensure the correct answer matches one of the provided options
+                const validCorrectAnswer = answerOptions.find(option => option.includes(correctAnswer)) || '';
+
+                // Push the formatted question into the quiz array
+                this.quiz.push({
+                    text: questionText,
+                    answers: answerOptions,
+                    correct: validCorrectAnswer
+                });
+            } else {
+                this.errorMessage = 'Failed to generate one or more questions. Please try again.';
+                break;
             }
-        },
+        }
+    } catch (err) {
+        this.errorMessage = 'Error: ' + err.message;
+    } finally {
+        this.loading = false;
+    }
+}
+,
 
         // Save the generated quiz to the backend
         // Save the generated quiz to the backend
